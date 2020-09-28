@@ -346,13 +346,15 @@ func (c *AccessConfig) GetCredentials(config *aws.Config) (*awsCredentials.Crede
 	// Validate the credentials before returning them
 	creds := awsCredentials.NewChainCredentials(providers)
 	cp, err := creds.Get()
-	if err != nil {
-		if IsAWSErr(err, "NoCredentialProviders", "") {
-			creds, err = c.GetCredentialsFromSession()
-			if err != nil {
-				return nil, err
-			}
+
+	if IsAWSErr(err, "NoCredentialProviders", "") {
+		creds, err = c.GetCredentialsFromSession()
+		if err != nil {
+			return nil, err
 		}
+	}
+
+	if err != nil {
 		return nil, fmt.Errorf("Error loading credentials for AWS Provider: %w", err)
 	}
 
@@ -441,7 +443,7 @@ func (c *AccessConfig) GetCredentials(config *aws.Config) (*awsCredentials.Crede
 
 // GetCredentialsFromSession returns credentials derived from a session. A
 // session uses the AWS SDK Go chain of providers so may use a provider (e.g.,
-// ProcessProvider) that is not part of the Terraform provider chain.
+// ProcessProvider) that is not part of the Packer provider chain.
 func (c *AccessConfig) GetCredentialsFromSession() (*awsCredentials.Credentials, error) {
 	log.Printf("[INFO] Attempting to use session-derived credentials")
 	// Avoid setting HTTPClient here as it will prevent the ec2metadata
